@@ -1,0 +1,4 @@
+.toast { position:fixed; right:1rem; bottom:1rem; z-index:20; display:flex; gap:1rem; align-items:center; max-width:440px; border:1px solid var(--line); border-radius:18px; background:#0f172a; padding:.9rem 1rem; box-shadow:var(--shadow); }
+.toast button { border:0; color:inherit; background:transparent; font-size:1.25rem; }
+.success { border-color:rgba(52,211,153,.35); color:#bbf7d0; }
+.error { border-color:rgba(251,113,133,.35); color:#fecdd3; }
