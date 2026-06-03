@@ -1,0 +1,38 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
+import { queryKeys } from "../../api/queryKeys";
+import { categoriesApi, expensesApi, merchantsApi, paymentMethodsApi, subcategoriesApi } from "../../api/resourcesApi";
+import { Button } from "../../components/Button";
+import { Card } from "../../components/Card";
+import { EmptyState, ErrorState, FieldError } from "../../components/Feedback";
+import type { ExpenseResponse, ID } from "../../types/api";
+import { getErrorMessage } from "../../utils/errors";
+import { formatCurrency, todayISO } from "../../utils/formatters";
+import styles from "./Crud.module.scss";
+
+const optionalId = z.preprocess((value) => value === "" ? null : Number(value), z.number().nullable().optional());
+const schema = z.object({ expenseDate: z.string().min(1), amount: z.coerce.number().min(0.01), categoryId: z.coerce.number().min(1), subcategoryId: optionalId, paymentMethodId: z.coerce.number().min(1), merchantId: optionalId, necessary: z.preprocess((v) => v === "true" || v === true, z.boolean()), description: z.string().max(255).optional() });
+type FormValues = z.infer<typeof schema>;
+const defaults: FormValues = { expenseDate: todayISO(), amount: 0, categoryId: 0, subcategoryId: null, paymentMethodId: 0, merchantId: null, necessary: true, description: "" };
+
+export function ExpensesPage() {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState<ExpenseResponse | null>(null);
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: defaults });
+  const categoryId = useWatch({ control: form.control, name: "categoryId" });
+  const listFilters = useMemo(() => ({ ...filters, categoryId: filters.categoryId ? Number(filters.categoryId) : undefined, paymentMethodId: filters.paymentMethodId ? Number(filters.paymentMethodId) : undefined, necessary: filters.necessary ? filters.necessary === "true" : undefined }), [filters]);
+  const list = useQuery({ queryKey: queryKeys.expenses(listFilters), queryFn: () => expensesApi.list(listFilters) });
+  const categories = useQuery({ queryKey: queryKeys.categories, queryFn: categoriesApi.list });
+  const payments = useQuery({ queryKey: queryKeys.paymentMethods, queryFn: paymentMethodsApi.list });
+  const merchants = useQuery({ queryKey: queryKeys.merchants, queryFn: merchantsApi.list });
+  const subcategories = useQuery({ queryKey: queryKeys.subcategoriesByCategory(categoryId), queryFn: () => subcategoriesApi.listByCategory(Number(categoryId)), enabled: Number(categoryId) > 0 });
+  useEffect(() => { form.setValue("subcategoryId", null); }, [categoryId, form]);
+  const save = useMutation({ mutationFn: (values: FormValues) => editing ? expensesApi.update(editing.id, { ...values, description: values.description || null }) : expensesApi.create({ ...values, description: values.description || null }), onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["expenses"] }); await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }); setEditing(null); form.reset(defaults); } });
+  const remove = useMutation({ mutationFn: expensesApi.remove, onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["expenses"] }); await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }); } });
+  const nameById = <T extends { id: ID; name: string }>(items: T[] | undefined, id: ID | null) => items?.find((item) => item.id === id)?.name ?? "-";
+  return <div className={styles.stack}>{(list.error || save.error || remove.error) && <ErrorState message={getErrorMessage(list.error ?? save.error ?? remove.error)} />}<Card title={editing ? "Editar gasto" : "Nuevo gasto"}><form className={styles.form} onSubmit={form.handleSubmit((v) => save.mutate(v))}><div className={styles.field}><label>Fecha</label><input type="date" {...form.register("expenseDate")} /><FieldError message={form.formState.errors.expenseDate?.message} /></div><div className={styles.field}><label>Monto</label><input type="number" step="0.01" {...form.register("amount")} /><FieldError message={form.formState.errors.amount?.message} /></div><div className={styles.field}><label>Categoría</label><select {...form.register("categoryId")}><option value="0">Seleccionar</option>{categories.data?.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select><FieldError message={form.formState.errors.categoryId?.message} /></div><div className={styles.field}><label>Subcategoría</label><select {...form.register("subcategoryId")}><option value="">Sin subcategoría</option>{subcategories.data?.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></div><div className={styles.field}><label>Medio de pago</label><select {...form.register("paymentMethodId")}><option value="0">Seleccionar</option>{payments.data?.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select><FieldError message={form.formState.errors.paymentMethodId?.message} /></div><div className={styles.field}><label>Comercio</label><select {...form.register("merchantId")}><option value="">Sin comercio</option>{merchants.data?.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></div><div className={styles.field}><label>Necesario</label><select {...form.register("necessary")}><option value="true">Sí</option><option value="false">No</option></select></div><div className={styles.field}><label>Descripción</label><input {...form.register("description")} /></div><div className={styles.actions}><Button disabled={save.isPending}>{editing ? "Guardar" : "Crear"}</Button>{editing && <Button type="button" variant="secondary" onClick={() => { setEditing(null); form.reset(defaults); }}>Cancelar</Button>}</div></form></Card><Card title="Filtros"><div className={styles.filters}><div className={styles.field}><label>Desde</label><input type="date" onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))} /></div><div className={styles.field}><label>Hasta</label><input type="date" onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))} /></div><div className={styles.field}><label>Necesario</label><select onChange={(e) => setFilters((f) => ({ ...f, necessary: e.target.value }))}><option value="">Todos</option><option value="true">Sí</option><option value="false">No</option></select></div></div></Card><Card title="Listado">{(list.data?.length ?? 0) === 0 ? <EmptyState /> : <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>ID</th><th>Fecha</th><th>Monto</th><th>Categoría</th><th>Pago</th><th>Necesario</th><th>Acciones</th></tr></thead><tbody>{list.data?.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.expenseDate}</td><td>{formatCurrency(item.amount)}</td><td>{nameById(categories.data, item.categoryId)}</td><td>{nameById(payments.data, item.paymentMethodId)}</td><td><span className={`${styles.badge} ${item.necessary ? styles.positive : styles.negative}`}>{item.necessary ? "Sí" : "No"}</span></td><td><div className={styles.rowActions}><Button size="small" variant="secondary" onClick={() => { setEditing(item); form.reset({ ...item, subcategoryId: item.subcategoryId ?? null, merchantId: item.merchantId ?? null, description: item.description ?? "" }); }}>Editar</Button><Button size="small" variant="danger" onClick={() => remove.mutate(item.id)}>Eliminar</Button></div></td></tr>)}</tbody></table></div>}</Card></div>;
+}
