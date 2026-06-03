@@ -1,9 +1,0 @@
-.kpi { min-height:132px; display:flex; flex-direction:column; justify-content:space-between; }
-.kpiLabel { color:var(--muted); font-weight:700; }
-.kpiValue { font-size:clamp(1.55rem, 3vw, 2.25rem); font-weight:900; margin:.45rem 0; }
-.kpiHint { color:#cbd5e1; font-size:.9rem; }
-.chartCard { min-height:360px; }
-.list { display:grid; gap:.75rem; }
-.rank { display:grid; grid-template-columns:1fr auto; gap:1rem; align-items:center; border-bottom:1px solid var(--line); padding-bottom:.65rem; }
-.rank:last-child { border-bottom:0; padding-bottom:0; }
-.rank span { color:var(--muted); font-size:.86rem; }
