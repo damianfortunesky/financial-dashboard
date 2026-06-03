@@ -1,0 +1,1 @@
+-- See database/002_tables.sql and database/003_indexes.sql for the core.products DDL.
