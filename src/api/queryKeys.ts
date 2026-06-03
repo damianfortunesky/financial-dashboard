@@ -1,0 +1,17 @@
+import type { ID } from "@/types/api";
+
+export const queryKeys = {
+  health: ["health"] as const,
+  categories: ["categories"] as const,
+  subcategories: ["subcategories"] as const,
+  subcategoriesByCategory: (categoryId: ID) => ["subcategories", "category", categoryId] as const,
+  paymentMethods: ["payment-methods"] as const,
+  merchants: ["merchants"] as const,
+  products: ["products"] as const,
+  incomes: (filters?: unknown) => ["incomes", filters] as const,
+  expenses: (filters?: unknown) => ["expenses", filters] as const,
+  purchases: (filters?: unknown) => ["purchases", filters] as const,
+  purchaseItems: ["purchase-items"] as const,
+  purchaseItemsByPurchase: (purchaseId: ID) => ["purchases", purchaseId, "items"] as const,
+  dashboard: ["dashboard"] as const,
+};
