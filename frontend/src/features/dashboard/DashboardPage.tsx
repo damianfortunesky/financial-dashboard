@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { queryKeys } from "../../api/queryKeys";
+import { BudgetPage } from "../budget/BudgetPage";
 import { dashboardApi } from "../../api/resourcesApi";
 import { Card } from "../../components/Card";
 import { EmptyState, ErrorState } from "../../components/Feedback";
@@ -96,6 +97,8 @@ export function DashboardPage() {
           )}
         </Card>
       </section>
+
+      <BudgetPage />
 
       <section className={`${styles.grid} ${styles.rankings}`}>
         <Card title="Necesidad" subtitle="Necesarios vs no necesarios.">
