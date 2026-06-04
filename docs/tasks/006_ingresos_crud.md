@@ -219,3 +219,16 @@ No implementar:
 - Seguridad.
 - Categorías de ingreso.
 - Paginación.
+---
+
+## Actualización obligatoria de persistencia
+
+El listado filtrado debe usar SQL dinámico MyBatis para parámetros opcionales `dateFrom` y `dateTo`.
+
+No usar condiciones del estilo:
+
+```sql
+(income_date >= #{dateFrom} OR #{dateFrom} IS NULL)
+```
+
+Con SQL Server y parámetros `null`, esa forma puede producir incompatibilidades de tipos. Usar `<script>`, `<where>` y `<if test='... != null'>`, con parámetros anotados con `@Param`.

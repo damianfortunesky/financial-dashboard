@@ -699,3 +699,33 @@ No implementar:
 * Auditoría.
 * Seguridad.
 * Tests automatizados.
+
+---
+
+## Actualización obligatoria de estado final (frontend + backend)
+
+Para evitar bugs ya detectados, el módulo de productos debe cumplir estas reglas adicionales:
+
+### Backend
+
+* `CreateProductRequest.subcategoryId` y `UpdateProductRequest.subcategoryId` deben ser `@NotNull`.
+* `ProductService` debe validar en create y update:
+  * `categoryId` obligatorio.
+  * `subcategoryId` obligatorio.
+  * La categoría debe existir.
+  * La subcategoría debe existir.
+  * La subcategoría debe pertenecer a la categoría seleccionada.
+* Si la subcategoría no pertenece a la categoría, devolver `BusinessException("SubCategory does not belong to selected category")`.
+* `unitOfMeasure` debe normalizarse en backend antes de guardar/actualizar:
+
+```java
+unitOfMeasure.trim().toUpperCase(Locale.ROOT)
+```
+
+### Frontend
+
+* `subcategoryId` es obligatorio (`z.coerce.number().min(1)`); no enviar `null` en create/update.
+* Al cambiar categoría, resetear `subcategoryId` a `0` para obligar a seleccionar una subcategoría válida.
+* Si un producto legacy tiene `subcategoryId = null`, al editarlo cargar `0` y obligar selección.
+* `unitOfMeasure` debe normalizarse también en frontend (`unidad` -> `UNIDAD`).
+* El listado de productos debe mostrar la columna `Subcategoría`.

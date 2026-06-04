@@ -679,3 +679,20 @@ No implementar:
 * Auditoría.
 * Seguridad.
 * Tests automatizados.
+
+---
+
+## Actualización obligatoria de persistencia y frontend
+
+### Persistencia
+
+`GET /api/v1/purchases` debe funcionar sin `dateFrom` ni `dateTo`. El mapper debe usar SQL dinámico MyBatis con `<if>` y `@Param`, no condiciones `OR #{dateFrom} IS NULL`.
+
+### Frontend
+
+La pantalla de compras debe cubrir:
+
+* Alta, baja y modificación de compras.
+* Selección de compra para ver/cargar ítems.
+* Al crear una compra, seleccionar automáticamente esa compra para cargar ítems asociados.
+* Invalidar dashboard después de mutaciones de compra.

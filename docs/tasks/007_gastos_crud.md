@@ -295,3 +295,16 @@ No implementar:
 - Seguridad.
 - Paginación.
 - Compras con detalle de productos.
+---
+
+## Actualización obligatoria de persistencia y frontend
+
+### Persistencia
+
+El listado filtrado debe usar SQL dinámico MyBatis para todos los filtros opcionales (`dateFrom`, `dateTo`, `categoryId`, `subcategoryId`, `paymentMethodId`, `merchantId`, `necessary`).
+
+No usar condiciones `OR #{param} IS NULL`; usar `<if>` dentro de `<where>` y `@Param` en cada parámetro.
+
+### Frontend
+
+Cuando el usuario selecciona `Sin comercio`, enviar `merchantId: null` o no enviar el campo. Nunca enviar `merchantId: 0`, porque el backend lo interpreta como referencia a un comercio inexistente.

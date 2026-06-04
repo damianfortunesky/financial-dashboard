@@ -572,3 +572,24 @@ No implementar:
 * Inflación personal.
 
 Estas funcionalidades serán implementadas en tareas posteriores.
+
+---
+
+## Actualización obligatoria de UX frontend
+
+El panel mensual del dashboard no debe usar un gráfico de líneas cuando existe un único mes cargado. Ese gráfico muestra puntos aislados y no aporta información útil.
+
+Regla final:
+
+* Si `monthly-balance` devuelve `[]`, mostrar estado vacío.
+* Si devuelve un solo mes, mostrar un resumen directo con:
+  * Ingresos.
+  * Gastos.
+  * Resultado.
+  * Barra `Gasto sobre ingresos`.
+* Si devuelve más de un mes, mostrar un gráfico de barras comparativo con:
+  * Ingresos.
+  * Gastos.
+  * Balance.
+
+El objetivo es que el dashboard sea interpretativo, no sólo decorativo.

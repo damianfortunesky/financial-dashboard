@@ -668,3 +668,31 @@ No implementar:
 * Tests automatizados.
 
 Estas funcionalidades serán implementadas en tareas posteriores.
+
+---
+
+## Actualización obligatoria de UX frontend
+
+La pantalla de compras debe permitir alta/baja/modificación de ítems asociados a una compra con acciones explícitas y separadas.
+
+Flujo requerido:
+
+1. En el listado de compras, botón `Ítems` selecciona una compra.
+2. Se muestra formulario de ítem para esa compra.
+3. El formulario tiene botones separados:
+   * `Agregar ítem`
+   * `Modificar ítem`
+   * `Eliminar ítem`
+   * `Cancelar selección` cuando hay ítem seleccionado
+4. La tabla de ítems tiene botón `Seleccionar` por fila.
+5. Al seleccionar una fila:
+   * cargar producto, cantidad, precio unitario y notas en el formulario.
+   * resaltar visualmente la fila.
+   * habilitar `Modificar ítem` y `Eliminar ítem`.
+6. Sin selección, `Modificar ítem` y `Eliminar ítem` deben estar deshabilitados.
+7. Luego de agregar/modificar/eliminar:
+   * invalidar query de ítems de esa compra.
+   * invalidar dashboard.
+   * limpiar formulario y selección.
+
+No usar una UX donde el botón `Agregar ítem` cambie implícitamente a edición sin que el usuario entienda qué está pasando.

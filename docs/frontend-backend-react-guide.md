@@ -1274,3 +1274,35 @@ Usa Vite, TanStack Query, React Router, React Hook Form + Zod y un UI kit modern
 Implementa dashboard, CRUD de ingresos/gastos/compras/productos/catálogos, manejo de errores ApiErrorResponse, selects dependientes categoría/subcategoría y proxy Vite hacia http://localhost:8080.
 Respeta exactamente los tipos, endpoints, validaciones y reglas de negocio del documento.
 ```
+
+---
+
+## 18. Addendum de estado final implementado
+
+Este addendum prevalece sobre secciones anteriores si hubiera contradicciones.
+
+### Productos
+
+* `CreateProductRequest.subcategoryId` es obligatorio en frontend y backend.
+* `UpdateProductRequest.subcategoryId` es obligatorio en frontend y backend.
+* `ProductResponse.subcategoryId` puede llegar `null` sólo por datos legacy, pero la UI no debe permitir guardar productos nuevos/editados sin subcategoría.
+* `unitOfMeasure` se normaliza en frontend y backend a mayúsculas con trim (`unidad` -> `UNIDAD`).
+* El listado de productos debe mostrar la subcategoría.
+
+### Dashboard
+
+* No mostrar line chart mensual cuando hay un único mes.
+* Con un único mes, mostrar resumen de ingresos/gastos/resultado y barra `Gasto sobre ingresos`.
+* Con múltiples meses, mostrar gráfico de barras para comparar ingresos, gastos y balance.
+
+### Compras e ítems
+
+* La pantalla de compras debe permitir alta/baja/modificación de compras.
+* La sección de ítems asociados debe tener botones separados para `Agregar ítem`, `Modificar ítem` y `Eliminar ítem`.
+* Para modificar/eliminar un ítem, el usuario debe seleccionar una fila del listado con botón `Seleccionar`.
+* La fila seleccionada debe resaltarse y los botones modificar/eliminar deben estar deshabilitados si no hay selección.
+
+### MyBatis y filtros opcionales
+
+* `IncomeMapper`, `ExpenseMapper` y `PurchaseMapper` deben usar SQL dinámico (`<script>`, `<where>`, `<if>`) y `@Param` para filtros opcionales.
+* No usar expresiones `OR #{param} IS NULL` en comparaciones de fecha o filtros opcionales.
