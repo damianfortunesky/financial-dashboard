@@ -13,5 +13,6 @@ public class CreateProductRequest {
     private String unitOfMeasure;
     @NotNull
     private Long categoryId;
+    @NotNull
     private Long subcategoryId;
 }

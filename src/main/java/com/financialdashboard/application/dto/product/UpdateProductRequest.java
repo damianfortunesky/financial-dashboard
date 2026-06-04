@@ -13,6 +13,7 @@ public class UpdateProductRequest {
     private String unitOfMeasure;
     @NotNull
     private Long categoryId;
+    @NotNull
     private Long subcategoryId;
     private Boolean active;
 }

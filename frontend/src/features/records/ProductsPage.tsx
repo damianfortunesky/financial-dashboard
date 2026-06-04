@@ -10,26 +10,26 @@ import { Card } from "../../components/Card";
 import { EmptyState, ErrorState, FieldError } from "../../components/Feedback";
 import type { ProductResponse } from "../../types/api";
 import { getErrorMessage } from "../../utils/errors";
-import { normalizeUnitOfMeasure, optionalSelectId } from "../../utils/formParsers";
+import { normalizeUnitOfMeasure } from "../../utils/formParsers";
 import styles from "./Crud.module.scss";
 
-const optionalId = z.preprocess(optionalSelectId, z.number().nullable().optional());
 const schema = z.object({
   name: z.string().trim().min(1).max(150),
   description: z.string().max(100).optional(),
   unitOfMeasure: z.preprocess(normalizeUnitOfMeasure, z.string().min(1).max(50)),
   categoryId: z.coerce.number().min(1),
-  subcategoryId: optionalId,
+  subcategoryId: z.coerce.number().min(1),
   active: z.boolean().optional()
 });
-type FormValues = z.infer<typeof schema>;
-const defaults: FormValues = { name: "", description: "", unitOfMeasure: "UNIDAD", categoryId: 0, subcategoryId: null, active: true };
+type FormInput = z.input<typeof schema>;
+type FormValues = z.output<typeof schema>;
+const defaults: FormInput = { name: "", description: "", unitOfMeasure: "UNIDAD", categoryId: 0, subcategoryId: 0, active: true };
 
 export function ProductsPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<ProductResponse | null>(null);
   const previousCategoryId = useRef<number | undefined>(undefined);
-  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: defaults });
+  const form = useForm<FormInput, unknown, FormValues>({ resolver: zodResolver(schema), defaultValues: defaults });
   const unitOfMeasureField = form.register("unitOfMeasure", { setValueAs: normalizeUnitOfMeasure });
   const categoryId = useWatch({ control: form.control, name: "categoryId" });
   const list = useQuery({ queryKey: queryKeys.products, queryFn: productsApi.list });
@@ -46,7 +46,7 @@ export function ProductsPage() {
     const previous = previousCategoryId.current;
 
     if (previous !== undefined && previous > 0 && previous !== normalizedCategoryId) {
-      form.setValue("subcategoryId", null);
+      form.setValue("subcategoryId", 0);
     }
 
     previousCategoryId.current = normalizedCategoryId;
@@ -112,9 +112,10 @@ export function ProductsPage() {
           <div className={styles.field}>
             <label>Subcategoría</label>
             <select {...form.register("subcategoryId")}>
-              <option value="">Sin subcategoría</option>
+              <option value="0">Seleccionar</option>
               {subcategories.data?.map((subcategory) => <option key={subcategory.id} value={subcategory.id}>{subcategory.name}</option>)}
             </select>
+            <FieldError message={form.formState.errors.subcategoryId?.message} />
           </div>
           <div className={styles.field}>
             <label>Descripción</label>
@@ -163,7 +164,7 @@ export function ProductsPage() {
                     <td><span className={`${styles.badge} ${item.active ? styles.positive : styles.negative}`}>{item.active ? "Activo" : "Inactivo"}</span></td>
                     <td>
                       <div className={styles.rowActions}>
-                        <Button size="small" variant="secondary" onClick={() => { setEditing(item); form.reset({ ...item, subcategoryId: item.subcategoryId ?? null, description: item.description ?? "" }); }}>Editar</Button>
+                        <Button size="small" variant="secondary" onClick={() => { setEditing(item); form.reset({ ...item, subcategoryId: item.subcategoryId ?? 0, description: item.description ?? "" }); }}>Editar</Button>
                         <Button size="small" variant="danger" onClick={() => remove.mutate(item.id)}>Eliminar</Button>
                       </div>
                     </td>

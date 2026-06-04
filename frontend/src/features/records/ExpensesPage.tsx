@@ -16,14 +16,15 @@ import styles from "./Crud.module.scss";
 
 const optionalId = z.preprocess(optionalSelectId, z.number().nullable().optional());
 const schema = z.object({ expenseDate: z.string().min(1), amount: z.coerce.number().min(0.01), categoryId: z.coerce.number().min(1), subcategoryId: optionalId, paymentMethodId: z.coerce.number().min(1), merchantId: optionalId, necessary: z.preprocess((v) => v === "true" || v === true, z.boolean()), description: z.string().max(255).optional() });
-type FormValues = z.infer<typeof schema>;
-const defaults: FormValues = { expenseDate: todayISO(), amount: 0, categoryId: 0, subcategoryId: null, paymentMethodId: 0, merchantId: null, necessary: true, description: "" };
+type FormInput = z.input<typeof schema>;
+type FormValues = z.output<typeof schema>;
+const defaults: FormInput = { expenseDate: todayISO(), amount: 0, categoryId: 0, subcategoryId: null, paymentMethodId: 0, merchantId: null, necessary: true, description: "" };
 
 export function ExpensesPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<ExpenseResponse | null>(null);
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: defaults });
+  const form = useForm<FormInput, unknown, FormValues>({ resolver: zodResolver(schema), defaultValues: defaults });
   const categoryId = useWatch({ control: form.control, name: "categoryId" });
   const listFilters = useMemo(() => ({ ...filters, categoryId: filters.categoryId ? Number(filters.categoryId) : undefined, paymentMethodId: filters.paymentMethodId ? Number(filters.paymentMethodId) : undefined, necessary: filters.necessary ? filters.necessary === "true" : undefined }), [filters]);
   const list = useQuery({ queryKey: queryKeys.expenses(listFilters), queryFn: () => expensesApi.list(listFilters) });

@@ -127,7 +127,7 @@ export interface CreateProductRequest {
   description?: string | null;
   unitOfMeasure: string;
   categoryId: ID;
-  subcategoryId?: ID | null;
+  subcategoryId: ID;
 }
 
 export interface UpdateProductRequest extends CreateProductRequest {

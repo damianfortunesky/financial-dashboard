@@ -19,8 +19,7 @@ public class ProductService implements ProductUseCase {
 
     @Override
     public ProductResponse create(CreateProductRequest request) {
-        ensureExists(categoryRepository, request.getCategoryId(), "Category");
-        if (request.getSubcategoryId() != null) { ensureExists(subCategoryRepository, request.getSubcategoryId(), "SubCategory"); }
+        validateProductRefs(request.getCategoryId(), request.getSubcategoryId());
         if (repository.existsByName(request.getName())) { throw new DuplicateResourceException("Product already exists"); }
         Product entity = Product.builder()
                 .name(request.getName())
@@ -36,6 +35,7 @@ public class ProductService implements ProductUseCase {
     @Override
     public ProductResponse update(Long id, UpdateProductRequest request) {
         Product current = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        validateProductRefs(request.getCategoryId(), request.getSubcategoryId());
         Product entity = Product.builder()
                 .id(id)
                 .name(request.getName())
@@ -64,6 +64,17 @@ public class ProductService implements ProductUseCase {
     public void delete(Long id) {
         repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         repository.deleteById(id);
+    }
+
+    private void validateProductRefs(Long categoryId, Long subcategoryId) {
+        if (categoryId == null) { throw new BusinessException("Category is required"); }
+        if (subcategoryId == null) { throw new BusinessException("SubCategory is required"); }
+        ensureExists(categoryRepository, categoryId, "Category");
+        var subcategory = subCategoryRepository.findById(subcategoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("SubCategory not found"));
+        if (!subcategory.getCategoryId().equals(categoryId)) {
+            throw new BusinessException("SubCategory does not belong to selected category");
+        }
     }
 
     private String normalizeUnitOfMeasure(String unitOfMeasure) {
