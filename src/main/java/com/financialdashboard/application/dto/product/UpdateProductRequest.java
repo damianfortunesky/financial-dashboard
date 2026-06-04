@@ -1,8 +1,6 @@
 package com.financialdashboard.application.dto.product;
 
 import jakarta.validation.constraints.*;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import lombok.Data;
 
 @Data
@@ -15,6 +13,7 @@ public class UpdateProductRequest {
     private String unitOfMeasure;
     @NotNull
     private Long categoryId;
+    @NotNull
     private Long subcategoryId;
     private Boolean active;
 }
