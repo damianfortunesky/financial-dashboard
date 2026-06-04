@@ -1,7 +1,6 @@
 package com.financialdashboard.domain.port.out;
 
 import com.financialdashboard.domain.model.SubCategory;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 

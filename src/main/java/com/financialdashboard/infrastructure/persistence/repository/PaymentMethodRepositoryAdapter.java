@@ -3,7 +3,6 @@ package com.financialdashboard.infrastructure.persistence.repository;
 import com.financialdashboard.domain.model.PaymentMethod;
 import com.financialdashboard.domain.port.out.PaymentMethodRepositoryPort;
 import com.financialdashboard.infrastructure.persistence.mapper.PaymentMethodMapper;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;

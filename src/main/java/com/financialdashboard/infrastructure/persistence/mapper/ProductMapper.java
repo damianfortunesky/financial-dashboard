@@ -1,7 +1,6 @@
 package com.financialdashboard.infrastructure.persistence.mapper;
 
 import com.financialdashboard.domain.model.Product;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.apache.ibatis.annotations.*;
