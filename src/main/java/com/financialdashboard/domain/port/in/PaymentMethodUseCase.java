@@ -1,7 +1,6 @@
 package com.financialdashboard.domain.port.in;
 
 import com.financialdashboard.application.dto.paymentmethod.*;
-import java.time.LocalDate;
 import java.util.List;
 
 public interface PaymentMethodUseCase {
