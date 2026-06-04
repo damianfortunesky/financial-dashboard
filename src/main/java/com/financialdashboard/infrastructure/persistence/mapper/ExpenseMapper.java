@@ -39,8 +39,25 @@ public interface ExpenseMapper {
     @Update("UPDATE core.expenses SET is_active = 0, updated_at = SYSUTCDATETIME() WHERE expense_id = #{id}")
     void softDeleteById(Long id);
 
-    @Select("SELECT * FROM core.expenses WHERE (expense_date >= #{dateFrom} OR #{dateFrom} IS NULL) AND (expense_date <= #{dateTo} OR #{dateTo} IS NULL) AND (category_id = #{categoryId} OR #{categoryId} IS NULL) AND (subcategory_id = #{subcategoryId} OR #{subcategoryId} IS NULL) AND (payment_method_id = #{paymentMethodId} OR #{paymentMethodId} IS NULL) AND (merchant_id = #{merchantId} OR #{merchantId} IS NULL) AND (is_necessary = #{necessary} OR #{necessary} IS NULL)")
+    @Select({"<script>",
+            "SELECT * FROM core.expenses",
+            "<where>",
+            "<if test='dateFrom != null'>AND expense_date &gt;= #{dateFrom}</if>",
+            "<if test='dateTo != null'>AND expense_date &lt;= #{dateTo}</if>",
+            "<if test='categoryId != null'>AND category_id = #{categoryId}</if>",
+            "<if test='subcategoryId != null'>AND subcategory_id = #{subcategoryId}</if>",
+            "<if test='paymentMethodId != null'>AND payment_method_id = #{paymentMethodId}</if>",
+            "<if test='merchantId != null'>AND merchant_id = #{merchantId}</if>",
+            "<if test='necessary != null'>AND is_necessary = #{necessary}</if>",
+            "</where>",
+            "</script>"})
     @ResultMap("ExpenseResult")
-    List<Expense> findAllFiltered(LocalDate dateFrom, LocalDate dateTo, Long categoryId, Long subcategoryId, Long paymentMethodId, Long merchantId, Boolean necessary);
+    List<Expense> findAllFiltered(@Param("dateFrom") LocalDate dateFrom,
+                                  @Param("dateTo") LocalDate dateTo,
+                                  @Param("categoryId") Long categoryId,
+                                  @Param("subcategoryId") Long subcategoryId,
+                                  @Param("paymentMethodId") Long paymentMethodId,
+                                  @Param("merchantId") Long merchantId,
+                                  @Param("necessary") Boolean necessary);
 
 }
