@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { queryKeys } from "../../api/queryKeys";
@@ -28,6 +28,7 @@ const defaults: FormInput = { name: "", description: "", unitOfMeasure: "UNIDAD"
 export function ProductsPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<ProductResponse | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const previousCategoryId = useRef<number | undefined>(undefined);
   const form = useForm<FormInput, unknown, FormValues>({ resolver: zodResolver(schema), defaultValues: defaults });
   const unitOfMeasureField = form.register("unitOfMeasure", { setValueAs: normalizeUnitOfMeasure });
@@ -71,6 +72,26 @@ export function ProductsPage() {
   const remove = useMutation({ mutationFn: productsApi.remove, onSuccess: async () => queryClient.invalidateQueries({ queryKey: queryKeys.products }) });
   const categoryName = (id: number) => categories.data?.find((category) => category.id === id)?.name ?? "-";
   const subcategoryName = (id: number | null) => id ? allSubcategories.data?.find((subcategory) => subcategory.id === id)?.name ?? "-" : "-";
+  const normalizedSearchTerm = searchTerm.trim().toLocaleLowerCase();
+  const filteredProducts = useMemo(() => {
+    if (!normalizedSearchTerm) {
+      return list.data ?? [];
+    }
+
+    return (list.data ?? []).filter((item) => {
+      const searchableValues = [
+        String(item.id),
+        item.name,
+        item.description ?? "",
+        item.unitOfMeasure,
+        categoryName(item.categoryId),
+        subcategoryName(item.subcategoryId),
+        item.active ? "activo" : "inactivo"
+      ];
+
+      return searchableValues.some((value) => value.toLocaleLowerCase().includes(normalizedSearchTerm));
+    });
+  }, [list.data, normalizedSearchTerm, categories.data, allSubcategories.data]);
   const error = list.error ?? save.error ?? remove.error ?? allSubcategories.error;
 
   return (
@@ -137,10 +158,27 @@ export function ProductsPage() {
         </form>
       </Card>
       <Card title="Listado">
+        <div className={styles.listHeader}>
+          <div className={styles.searchField}>
+            <label htmlFor="products-search">Buscar en productos</label>
+            <input
+              id="products-search"
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Filtrar por nombre, categoría, subcategoría, unidad o estado..."
+            />
+          </div>
+          <span className={styles.resultCount}>
+            {filteredProducts.length} de {list.data?.length ?? 0} productos
+          </span>
+        </div>
         {(list.data?.length ?? 0) === 0 ? (
           <EmptyState />
+        ) : filteredProducts.length === 0 ? (
+          <EmptyState message="No hay productos que coincidan con la búsqueda." />
         ) : (
-          <div className={styles.tableWrap}>
+          <div className={`${styles.tableWrap} ${styles.scrollableList}`}>
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -154,7 +192,7 @@ export function ProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {list.data?.map((item) => (
+                {filteredProducts.map((item) => (
                   <tr key={item.id}>
                     <td>{item.id}</td>
                     <td>{item.name}</td>
