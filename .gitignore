@@ -1,1 +1,31 @@
+# Environment and secrets
 .env
+.env.*
+!.env.example
+*.local
+
+# Java / Maven backend
+/target/
+**/target/
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+logs/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Runtime / temporary files
+*.pid
+*.tmp
+*.temp
