@@ -1,7 +1,6 @@
 package com.financialdashboard.infrastructure.persistence.mapper;
 
 import com.financialdashboard.domain.model.Product;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.apache.ibatis.annotations.*;
@@ -27,9 +26,19 @@ public interface ProductMapper {
             @Result(column = "updated_at", property = "updatedAt")})
     Optional<Product> findById(Long id);
 
-    @Select("SELECT * FROM core.products WHERE is_active = 1")
+    @Select({
+            "<script>",
+            "SELECT * FROM core.products",
+            "<where>",
+            "  <if test='active != null'>",
+            "    is_active = #{active}",
+            "  </if>",
+            "</where>",
+            "ORDER BY product_id",
+            "</script>"
+    })
     @ResultMap("ProductResult")
-    List<Product> findAll();
+    List<Product> findAll(@Param("active") Boolean active);
 
     @Delete("DELETE FROM core.products WHERE product_id = #{id}")
     void deleteById(Long id);

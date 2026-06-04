@@ -3,7 +3,6 @@ package com.financialdashboard.infrastructure.persistence.repository;
 import com.financialdashboard.domain.model.Product;
 import com.financialdashboard.domain.port.out.ProductRepositoryPort;
 import com.financialdashboard.infrastructure.persistence.mapper.ProductMapper;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     public Optional<Product> findById(Long id) { return mapper.findById(id); }
 
     @Override
-    public List<Product> findAll() { return mapper.findAll(); }
+    public List<Product> findAll(Boolean active) { return mapper.findAll(active); }
 
     @Override
     public void deleteById(Long id) { mapper.softDeleteById(id); }
