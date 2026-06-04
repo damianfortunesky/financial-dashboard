@@ -1,26 +1,29 @@
 @use "../../styles/variables" as *;
 
-.sheetCard { overflow: hidden; }
 .summary { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
-.summaryItem { border: 1px solid $border; border-radius: 14px; padding: 0.9rem; background: rgba(15, 23, 42, 0.46); }
+.summaryItem { border: 1px solid $border; border-radius: 14px; padding: 0.9rem; background: linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.48)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03); }
 .summaryItem span { display: block; color: $muted; font-size: 0.8rem; font-weight: 750; }
-.summaryItem strong { display: block; margin-top: 0.35rem; font-size: 1.1rem; }
-.sheetWrap { overflow: auto; border: 1px solid $border; border-radius: 14px; background: #d9eef3; }
-.sheet { width: max-content; min-width: 100%; border-collapse: collapse; color: #020617; font-size: 0.78rem; }
-.sheet th, .sheet td { border: 1px solid #0f172a; padding: 0.34rem 0.45rem; white-space: nowrap; }
-.sheet thead th { position: sticky; top: 0; z-index: 2; background: #050505; color: #fff; text-align: center; font-weight: 850; }
-.label { min-width: 220px; max-width: 280px; position: sticky; left: 0; z-index: 1; background: inherit; font-weight: 700; text-align: left; }
-.month { min-width: 105px; text-align: right; font-variant-numeric: tabular-nums; }
-.section td, .section .label { background: #8ed0dc; font-weight: 850; text-transform: uppercase; }
-.income td, .income .label { background: #d9eef3; }
-.expense td, .expense .label { background: #ffd0a6; }
-.purchase td, .purchase .label { background: #bfe5ec; }
-.total td, .total .label { background: #f0cccc; font-weight: 850; }
-.net td, .net .label { background: #c9ef9b; font-weight: 900; }
-.empty td, .empty .label { background: #eef8fb; height: 1rem; }
-.value { text-align: right; font-weight: 700; }
-.zero { color: #475569; text-align: center; }
-.negative { color: #9f1239; }
-.hint { margin: 0.75rem 0 0; color: $muted; font-size: 0.85rem; }
+.summaryItem strong { display: block; margin-top: 0.35rem; color: $text; font-size: 1.1rem; }
+.sheetWrap { overflow-x: auto; overflow-y: hidden; border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 14px; background: rgba(2, 6, 23, 0.58); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04); scrollbar-color: rgba(34, 211, 238, 0.55) rgba(15, 23, 42, 0.92); scrollbar-width: thin; }
+.sheetWrap::-webkit-scrollbar { height: 12px; }
+.sheetWrap::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.92); border-radius: 999px; }
+.sheetWrap::-webkit-scrollbar-thumb { background: linear-gradient(135deg, rgba(34, 211, 238, 0.75), rgba(52, 211, 153, 0.72)); border: 3px solid rgba(15, 23, 42, 0.92); border-radius: 999px; }
+.sheet { width: max-content; min-width: 1500px; border-collapse: separate; border-spacing: 0; color: $text; font-size: 0.78rem; }
+.sheet th, .sheet td { border-right: 1px solid rgba(148, 163, 184, 0.18); border-bottom: 1px solid rgba(148, 163, 184, 0.16); padding: 0.52rem 0.6rem; white-space: nowrap; }
+.sheet thead th { position: sticky; top: 0; z-index: 3; background: #020617; color: #f8fafc; text-align: center; font-weight: 850; text-transform: uppercase; }
+.label { min-width: 230px; max-width: 300px; position: sticky; left: 0; z-index: 2; background: rgba(15, 23, 42, 0.96); color: $text; font-weight: 800; text-align: left; box-shadow: 10px 0 18px rgba(2, 6, 23, 0.26); }
+thead .label { z-index: 4; background: #020617; color: #f8fafc; text-align: center; }
+.month { min-width: 112px; text-align: right; font-variant-numeric: tabular-nums; }
+.section td, .section .label { background: rgba(34, 211, 238, 0.20); color: #cffafe; font-weight: 900; text-transform: uppercase; }
+.income td, .income .label { background: rgba(15, 23, 42, 0.74); }
+.expense td, .expense .label { background: rgba(251, 191, 36, 0.16); color: #ffedd5; }
+.purchase td, .purchase .label { background: rgba(34, 211, 238, 0.10); color: #e0f2fe; }
+.total td, .total .label { background: rgba(251, 113, 133, 0.16); color: #ffe4e6; font-weight: 900; }
+.net td, .net .label { background: rgba(52, 211, 153, 0.18); color: #dcfce7; font-weight: 950; }
+.empty td, .empty .label { background: rgba(15, 23, 42, 0.38); height: 0.9rem; }
+.value { text-align: right; font-weight: 800; }
+.zero { color: rgba(148, 163, 184, 0.72); text-align: center; }
+.negative { color: #fecdd3; }
+.hint { margin: 0.85rem 0 0; color: $muted; font-size: 0.85rem; }
 @media (max-width: 1150px) { .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 680px) { .summary { grid-template-columns: 1fr; } }
+@media (max-width: 680px) { .summary { grid-template-columns: 1fr; } .sheet { min-width: 1250px; } }
