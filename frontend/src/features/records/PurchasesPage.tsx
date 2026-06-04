@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { queryKeys } from "../../api/queryKeys";
 import { merchantsApi, paymentMethodsApi, productsApi, purchaseItemsApi, purchasesApi } from "../../api/resourcesApi";
@@ -40,8 +40,10 @@ export function PurchasesPage() {
   const [editing, setEditing] = useState<PurchaseResponse | null>(null);
   const [editingItem, setEditingItem] = useState<PurchaseItemResponse | null>(null);
   const [selectedPurchase, setSelectedPurchase] = useState<number | null>(null);
+  const [productDropdownOpen, setProductDropdownOpen] = useState(false);
   const form = useForm<FormInput, unknown, FormValues>({ resolver: zodResolver(schema), defaultValues: purchaseDefaults });
   const itemForm = useForm<ItemInput, unknown, ItemValues>({ resolver: zodResolver(itemSchema), defaultValues: itemDefaults(null) });
+  const selectedProductId = Number(useWatch({ control: itemForm.control, name: "productId" }) ?? 0);
   const list = useQuery({ queryKey: queryKeys.purchases(), queryFn: () => purchasesApi.list() });
   const merchants = useQuery({ queryKey: queryKeys.merchants, queryFn: merchantsApi.list });
   const payments = useQuery({ queryKey: queryKeys.paymentMethods, queryFn: paymentMethodsApi.list });
@@ -55,6 +57,7 @@ export function PurchasesPage() {
 
   const resetItemForm = (purchaseId = selectedPurchase) => {
     setEditingItem(null);
+    setProductDropdownOpen(false);
     itemForm.reset(itemDefaults(purchaseId));
   };
 
@@ -102,11 +105,20 @@ export function PurchasesPage() {
   });
   const selectItem = (item: PurchaseItemResponse) => {
     setEditingItem(item);
+    setProductDropdownOpen(false);
     itemForm.reset({ purchaseId: selectedPurchase ?? item.purchaseId, productId: item.productId, quantity: item.quantity, unitPrice: item.unitPrice, notes: item.notes ?? "" });
   };
   const name = <T extends { id: number; name: string }>(xs: T[] | undefined, id: number) => xs?.find((x) => x.id === id)?.name ?? "-";
-  const productOptionsCount = products.data?.length ?? 0;
-  const productSelectSize = productOptionsCount > 8 ? 8 : undefined;
+  const selectedProductLabel = selectedProductId > 0 ? name(allProducts.data, selectedProductId) : "Seleccionar";
+  const selectedPurchaseDetails = list.data?.find((purchase) => purchase.id === selectedPurchase);
+  const itemsSubtotal = (items.data ?? []).reduce((total, item) => total + Number(item.subtotal), 0);
+  const purchaseTotal = Number(selectedPurchaseDetails?.totalAmount ?? 0);
+  const subtotalDifference = purchaseTotal - itemsSubtotal;
+  const totalsMatch = Math.abs(subtotalDifference) < 0.01;
+  const chooseProduct = (productId: number) => {
+    itemForm.setValue("productId", productId, { shouldDirty: true, shouldValidate: true });
+    setProductDropdownOpen(false);
+  };
   const error = list.error ?? save.error ?? addItem.error ?? updateItem.error ?? remove.error ?? removeItem.error ?? items.error ?? products.error ?? allProducts.error;
 
   return (
@@ -132,12 +144,45 @@ export function PurchasesPage() {
         <Card title={`Ítems de compra #${selectedPurchase}`}>
           <form className={styles.form} onSubmit={itemForm.handleSubmit((values) => addItem.mutate(values))}>
             <input type="hidden" {...itemForm.register("purchaseId")} />
-            <div className={styles.field}>
-              <label>Producto</label>
-              <select className={productSelectSize ? styles.scrollableSelect : undefined} size={productSelectSize} {...itemForm.register("productId")}>
-                <option value="0">Seleccionar</option>
-                {products.data?.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}
-              </select>
+            <div className={`${styles.field} ${styles.comboField}`}>
+              <label id="purchase-product-label">Producto</label>
+              <input type="hidden" {...itemForm.register("productId")} />
+              <button
+                type="button"
+                className={styles.comboButton}
+                aria-haspopup="listbox"
+                aria-expanded={productDropdownOpen}
+                aria-labelledby="purchase-product-label"
+                onClick={() => setProductDropdownOpen((open) => !open)}
+              >
+                <span>{selectedProductLabel}</span>
+                <span aria-hidden="true">▾</span>
+              </button>
+              {productDropdownOpen && (
+                <div className={styles.comboMenu} role="listbox" aria-labelledby="purchase-product-label">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={selectedProductId === 0}
+                    className={selectedProductId === 0 ? styles.comboOptionSelected : styles.comboOption}
+                    onClick={() => chooseProduct(0)}
+                  >
+                    Seleccionar
+                  </button>
+                  {products.data?.map((product) => (
+                    <button
+                      key={product.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedProductId === product.id}
+                      className={selectedProductId === product.id ? styles.comboOptionSelected : styles.comboOption}
+                      onClick={() => chooseProduct(product.id)}
+                    >
+                      {product.name}
+                    </button>
+                  ))}
+                </div>
+              )}
               <FieldError message={itemForm.formState.errors.productId?.message} />
             </div>
             <div className={styles.field}><label>Cantidad</label><input type="number" step="0.01" {...itemForm.register("quantity")} /><FieldError message={itemForm.formState.errors.quantity?.message} /></div>
@@ -150,7 +195,61 @@ export function PurchasesPage() {
               {editingItem && <Button type="button" variant="ghost" onClick={() => resetItemForm()}>Cancelar selección</Button>}
             </div>
           </form>
-          {(items.data?.length ?? 0) === 0 ? <EmptyState message="Esta compra todavía no tiene ítems." /> : <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Producto</th><th>Cantidad</th><th>Unitario</th><th>Subtotal</th><th>Acciones</th></tr></thead><tbody>{items.data?.map((item) => <tr key={item.id} className={editingItem?.id === item.id ? styles.selectedRow : undefined}><td>{name(allProducts.data, item.productId)}</td><td>{item.quantity}</td><td>{formatCurrency(item.unitPrice)}</td><td>{formatCurrency(item.subtotal)}</td><td><div className={styles.rowActions}><Button size="small" variant="secondary" onClick={() => selectItem(item)}>{editingItem?.id === item.id ? "Seleccionado" : "Seleccionar"}</Button></div></td></tr>)}</tbody></table></div>}
+          {(items.data?.length ?? 0) === 0 ? (
+            <EmptyState message="Esta compra todavía no tiene ítems." />
+          ) : (
+            <>
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th>Cantidad</th>
+                      <th>Unitario</th>
+                      <th>Subtotal</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.data?.map((item) => (
+                      <tr key={item.id} className={editingItem?.id === item.id ? styles.selectedRow : undefined}>
+                        <td>{name(allProducts.data, item.productId)}</td>
+                        <td>{item.quantity}</td>
+                        <td>{formatCurrency(item.unitPrice)}</td>
+                        <td>{formatCurrency(item.subtotal)}</td>
+                        <td>
+                          <div className={styles.rowActions}>
+                            <Button size="small" variant="secondary" onClick={() => selectItem(item)}>{editingItem?.id === item.id ? "Seleccionado" : "Seleccionar"}</Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className={styles.totalRow}>
+                      <td colSpan={3}>Total ítems</td>
+                      <td>{formatCurrency(itemsSubtotal)}</td>
+                      <td />
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div className={styles.subtotalSummary}>
+                <div>
+                  <span>Total compra</span>
+                  <strong>{formatCurrency(purchaseTotal)}</strong>
+                </div>
+                <div>
+                  <span>Suma de ítems</span>
+                  <strong>{formatCurrency(itemsSubtotal)}</strong>
+                </div>
+                <div className={totalsMatch ? styles.summaryOk : styles.summaryWarning}>
+                  <span>Diferencia</span>
+                  <strong>{formatCurrency(subtotalDifference)}</strong>
+                </div>
+              </div>
+            </>
+          )}
         </Card>
       )}
     </div>
