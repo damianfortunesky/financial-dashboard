@@ -10,6 +10,7 @@ import { formatCurrency } from "../../utils/formatters";
 import styles from "./BudgetPage.module.scss";
 
 type MonthKey = `${number}-${string}`;
+type MonthColumn = { key: MonthKey; label: string };
 type BudgetRowKind = "section" | "income" | "expense" | "purchase" | "total" | "net" | "empty";
 
 type BudgetRow = {
@@ -26,23 +27,30 @@ const parseLocalDate = (value: string) => {
   return new Date(year, month - 1, day);
 };
 const addMonths = (date: Date, months: number) => new Date(date.getFullYear(), date.getMonth() + months, 1);
+const monthDateFromKey = (key: MonthKey) => {
+  const [year, month] = key.split("-").map(Number);
+  return new Date(year, month - 1, 1);
+};
+const monthLabel = (key: MonthKey) => monthFormatter.format(monthDateFromKey(key)).replace(".", "");
 const emptyValues = (months: MonthKey[]) => Object.fromEntries(months.map((month) => [month, 0])) as Record<MonthKey, number>;
 const rowTotal = (row: BudgetRow) => Object.values(row.values).reduce((total, value) => total + value, 0);
 const addToRow = (row: BudgetRow, month: MonthKey, amount: number) => { row.values[month] = (row.values[month] ?? 0) + amount; };
 
-function buildMonths(incomes: IncomeResponse[], expenses: ExpenseResponse[], purchases: PurchaseResponse[]) {
-  const dates = [
-    ...incomes.map((item) => parseLocalDate(item.incomeDate)),
-    ...expenses.map((item) => parseLocalDate(item.expenseDate)),
-    ...purchases.map((item) => parseLocalDate(item.purchaseDate))
-  ];
-  const start = dates.length > 0 ? dates.sort((a, b) => a.getTime() - b.getTime())[0] : new Date();
-  const firstMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+function uniqueSortedMonths(incomes: IncomeResponse[], expenses: ExpenseResponse[], purchases: PurchaseResponse[]) {
+  return Array.from(new Set([
+    ...incomes.map((item) => monthKey(parseLocalDate(item.incomeDate))),
+    ...expenses.map((item) => monthKey(parseLocalDate(item.expenseDate))),
+    ...purchases.map((item) => monthKey(parseLocalDate(item.purchaseDate)))
+  ])).sort();
+}
 
-  return Array.from({ length: 13 }, (_, index) => {
-    const date = addMonths(firstMonth, index);
-    return { key: monthKey(date), label: monthFormatter.format(date).replace(".", "") };
-  });
+function buildMonths(incomes: IncomeResponse[], expenses: ExpenseResponse[], purchases: PurchaseResponse[]): MonthColumn[] {
+  const monthsWithData = uniqueSortedMonths(incomes, expenses, purchases);
+  const visibleMonths = monthsWithData.length >= 3
+    ? monthsWithData
+    : Array.from({ length: 4 }, (_, index) => monthKey(addMonths(monthDateFromKey(monthsWithData[0] ?? monthKey(new Date())), index)));
+
+  return visibleMonths.map((key) => ({ key, label: monthLabel(key) }));
 }
 
 function createRow(label: string, kind: BudgetRowKind, months: MonthKey[]): BudgetRow {
