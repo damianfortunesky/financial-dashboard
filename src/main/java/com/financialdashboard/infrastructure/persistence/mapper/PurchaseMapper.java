@@ -36,8 +36,14 @@ public interface PurchaseMapper {
     @Update("UPDATE core.purchases SET is_active = 0, updated_at = SYSUTCDATETIME() WHERE purchase_id = #{id}")
     void softDeleteById(Long id);
 
-    @Select("SELECT * FROM core.purchases WHERE (purchase_date >= #{dateFrom} OR #{dateFrom} IS NULL) AND (purchase_date <= #{dateTo} OR #{dateTo} IS NULL)")
+    @Select({"<script>",
+            "SELECT * FROM core.purchases",
+            "<where>",
+            "<if test='dateFrom != null'>AND purchase_date &gt;= #{dateFrom}</if>",
+            "<if test='dateTo != null'>AND purchase_date &lt;= #{dateTo}</if>",
+            "</where>",
+            "</script>"})
     @ResultMap("PurchaseResult")
-    List<Purchase> findAllFiltered(LocalDate dateFrom, LocalDate dateTo);
+    List<Purchase> findAllFiltered(@Param("dateFrom") LocalDate dateFrom, @Param("dateTo") LocalDate dateTo);
 
 }
