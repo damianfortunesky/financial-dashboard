@@ -1,0 +1,16 @@
+@use "../styles/variables" as *;
+.button {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0.68rem 0.95rem;
+  color: #07111d;
+  background: linear-gradient(135deg, $primary, $success);
+  font-weight: 750;
+  transition: transform 160ms ease, opacity 160ms ease, border-color 160ms ease;
+  &:hover { transform: translateY(-1px); }
+  &:disabled { cursor: not-allowed; opacity: 0.55; transform: none; }
+}
+.secondary { color: $text; background: $surface-soft; border-color: $border; }
+.danger { color: white; background: rgba(251, 113, 133, 0.16); border-color: rgba(251, 113, 133, 0.35); }
+.ghost { color: $muted; background: transparent; border-color: $border; }
+.small { padding: 0.45rem 0.7rem; font-size: 0.85rem; }
