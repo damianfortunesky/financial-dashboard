@@ -1,0 +1,5 @@
+@use "../styles/variables" as *;
+.box { border: 1px solid $border; border-radius: 14px; padding: 1rem; color: $muted; background: rgba(15, 23, 42, 0.52); }
+.error { border-color: rgba(251, 113, 133, 0.35); color: #fecdd3; background: rgba(251, 113, 133, 0.1); }
+.success { border-color: rgba(52, 211, 153, 0.35); color: #bbf7d0; background: rgba(52, 211, 153, 0.08); }
+.inlineError { color: #fda4af; font-size: 0.82rem; margin-top: 0.3rem; }
