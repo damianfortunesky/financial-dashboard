@@ -10,10 +10,11 @@ import { Card } from "../../components/Card";
 import { EmptyState, ErrorState, FieldError } from "../../components/Feedback";
 import type { ExpenseResponse, ID } from "../../types/api";
 import { getErrorMessage } from "../../utils/errors";
+import { optionalSelectId } from "../../utils/formParsers";
 import { formatCurrency, todayISO } from "../../utils/formatters";
 import styles from "./Crud.module.scss";
 
-const optionalId = z.preprocess((value) => value === "" ? null : Number(value), z.number().nullable().optional());
+const optionalId = z.preprocess(optionalSelectId, z.number().nullable().optional());
 const schema = z.object({ expenseDate: z.string().min(1), amount: z.coerce.number().min(0.01), categoryId: z.coerce.number().min(1), subcategoryId: optionalId, paymentMethodId: z.coerce.number().min(1), merchantId: optionalId, necessary: z.preprocess((v) => v === "true" || v === true, z.boolean()), description: z.string().max(255).optional() });
 type FormValues = z.infer<typeof schema>;
 const defaults: FormValues = { expenseDate: todayISO(), amount: 0, categoryId: 0, subcategoryId: null, paymentMethodId: 0, merchantId: null, necessary: true, description: "" };

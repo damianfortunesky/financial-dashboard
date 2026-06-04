@@ -10,9 +10,10 @@ import { Card } from "../../components/Card";
 import { EmptyState, ErrorState, FieldError } from "../../components/Feedback";
 import type { ProductResponse } from "../../types/api";
 import { getErrorMessage } from "../../utils/errors";
+import { optionalSelectId } from "../../utils/formParsers";
 import styles from "./Crud.module.scss";
 
-const optionalId = z.preprocess((v) => v === "" ? null : Number(v), z.number().nullable().optional());
+const optionalId = z.preprocess(optionalSelectId, z.number().nullable().optional());
 const schema = z.object({ name: z.string().trim().min(1).max(150), description: z.string().max(100).optional(), unitOfMeasure: z.string().trim().min(1).max(50), categoryId: z.coerce.number().min(1), subcategoryId: optionalId, active: z.boolean().optional() });
 type FormValues = z.infer<typeof schema>;
 const defaults: FormValues = { name: "", description: "", unitOfMeasure: "unidad", categoryId: 0, subcategoryId: null, active: true };
