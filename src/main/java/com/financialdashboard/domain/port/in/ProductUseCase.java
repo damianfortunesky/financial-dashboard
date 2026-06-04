@@ -7,6 +7,6 @@ public interface ProductUseCase {
     ProductResponse create(CreateProductRequest request);
     ProductResponse update(Long id, UpdateProductRequest request);
     ProductResponse findById(Long id);
-    List<ProductResponse> findAll();
+    List<ProductResponse> findAll(Boolean active);
     void delete(Long id);
 }

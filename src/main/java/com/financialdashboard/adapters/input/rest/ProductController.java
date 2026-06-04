@@ -5,10 +5,8 @@ import com.financialdashboard.domain.port.in.ProductUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +19,7 @@ public class ProductController {
 
     @GetMapping("/products")
     @Operation(summary = "List products")
-    public List<ProductResponse> findAll() { return useCase.findAll(); }
+    public List<ProductResponse> findAll(@RequestParam(required = false) Boolean active) { return useCase.findAll(active); }
 
     @GetMapping("/products/{id}")
     @Operation(summary = "Get Product by id")

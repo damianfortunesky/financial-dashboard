@@ -134,6 +134,10 @@ export interface UpdateProductRequest extends CreateProductRequest {
   active?: boolean | null;
 }
 
+export interface ProductFilters {
+  active?: boolean;
+}
+
 export interface PurchaseResponse {
   id: ID;
   purchaseDate: ISODate;

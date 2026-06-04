@@ -29,11 +29,13 @@ export function ProductsPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<ProductResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
   const previousCategoryId = useRef<number | undefined>(undefined);
   const form = useForm<FormInput, unknown, FormValues>({ resolver: zodResolver(schema), defaultValues: defaults });
   const unitOfMeasureField = form.register("unitOfMeasure", { setValueAs: normalizeUnitOfMeasure });
   const categoryId = useWatch({ control: form.control, name: "categoryId" });
-  const list = useQuery({ queryKey: queryKeys.products, queryFn: productsApi.list });
+  const productFilters = statusFilter === "all" ? {} : { active: statusFilter === "active" };
+  const list = useQuery({ queryKey: queryKeys.products(productFilters), queryFn: () => productsApi.list(productFilters) });
   const categories = useQuery({ queryKey: queryKeys.categories, queryFn: categoriesApi.list });
   const allSubcategories = useQuery({ queryKey: queryKeys.subcategories, queryFn: subcategoriesApi.list });
   const subcategories = useQuery({
@@ -64,12 +66,12 @@ export function ProductsPage() {
       return editing ? productsApi.update(editing.id, payload) : productsApi.create(payload);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.products });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.products() });
       setEditing(null);
       form.reset(defaults);
     }
   });
-  const remove = useMutation({ mutationFn: productsApi.remove, onSuccess: async () => queryClient.invalidateQueries({ queryKey: queryKeys.products }) });
+  const remove = useMutation({ mutationFn: productsApi.remove, onSuccess: async () => queryClient.invalidateQueries({ queryKey: queryKeys.products() }) });
   const categoryName = (id: number) => categories.data?.find((category) => category.id === id)?.name ?? "-";
   const subcategoryName = (id: number | null) => id ? allSubcategories.data?.find((subcategory) => subcategory.id === id)?.name ?? "-" : "-";
   const normalizedSearchTerm = searchTerm.trim().toLocaleLowerCase();
@@ -168,6 +170,14 @@ export function ProductsPage() {
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Filtrar por nombre, categoría, subcategoría, unidad o estado..."
             />
+          </div>
+          <div className={styles.statusFilter}>
+            <label htmlFor="products-status-filter">Estado</label>
+            <select id="products-status-filter" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "active" | "inactive" | "all")}>
+              <option value="active">Activos</option>
+              <option value="inactive">Inactivos</option>
+              <option value="all">Todos</option>
+            </select>
           </div>
           <span className={styles.resultCount}>
             {filteredProducts.length} de {list.data?.length ?? 0} productos

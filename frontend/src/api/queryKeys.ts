@@ -8,7 +8,7 @@ export const queryKeys = {
   subcategoriesByCategory: (categoryId: ID | string) => ["subcategories", "category", categoryId] as const,
   paymentMethods: ["payment-methods"] as const,
   merchants: ["merchants"] as const,
-  products: ["products"] as const,
+  products: (filters?: unknown) => filters === undefined ? (["products"] as const) : (["products", filters] as const),
   incomes: (filters?: unknown) => ["incomes", filters] as const,
   expenses: (filters?: unknown) => ["expenses", filters] as const,
   purchases: (filters?: unknown) => ["purchases", filters] as const,

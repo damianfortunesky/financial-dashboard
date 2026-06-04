@@ -56,8 +56,8 @@ public class ProductService implements ProductUseCase {
     }
 
     @Override
-    public List<ProductResponse> findAll() {
-        return repository.findAll().stream().map(this::toResponse).toList();
+    public List<ProductResponse> findAll(Boolean active) {
+        return repository.findAll(active).stream().map(this::toResponse).toList();
     }
 
     @Override

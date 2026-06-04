@@ -5,7 +5,6 @@ import com.financialdashboard.domain.model.PurchaseItem;
 import com.financialdashboard.domain.port.in.PurchaseItemUseCase;
 import com.financialdashboard.domain.port.out.*;
 import com.financialdashboard.shared.exception.*;
-import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,7 @@ public class PurchaseItemService implements PurchaseItemUseCase {
     @Override
     public PurchaseItemResponse create(CreatePurchaseItemRequest request) {
         ensureExists(purchaseRepository, request.getPurchaseId(), "Purchase");
-        ensureExists(productRepository, request.getProductId(), "Product");
+        validateActiveProduct(request.getProductId());
         PurchaseItem entity = PurchaseItem.builder()
                 .purchaseId(request.getPurchaseId())
                 .productId(request.getProductId())
@@ -35,6 +34,7 @@ public class PurchaseItemService implements PurchaseItemUseCase {
     @Override
     public PurchaseItemResponse update(Long id, UpdatePurchaseItemRequest request) {
         PurchaseItem current = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("PurchaseItem not found"));
+        validateActiveProduct(request.getProductId());
         PurchaseItem entity = PurchaseItem.builder()
                 .id(id)
                 .purchaseId(current.getPurchaseId())
@@ -69,6 +69,14 @@ public class PurchaseItemService implements PurchaseItemUseCase {
     public List<PurchaseItemResponse> findByPurchaseId(Long purchaseId) {
         ensureExists(purchaseRepository, purchaseId, "Purchase");
         return repository.findByPurchaseId(purchaseId).stream().map(this::toResponse).toList();
+    }
+
+    private void validateActiveProduct(Long productId) {
+        var product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        if (!Boolean.TRUE.equals(product.getActive())) {
+            throw new BusinessException("Product is inactive");
+        }
     }
 
     private PurchaseItemResponse toResponse(PurchaseItem entity) {

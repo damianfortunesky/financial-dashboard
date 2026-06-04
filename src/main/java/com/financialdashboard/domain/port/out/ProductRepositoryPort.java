@@ -8,7 +8,7 @@ public interface ProductRepositoryPort {
     Product save(Product entity);
     void update(Product entity);
     Optional<Product> findById(Long id);
-    List<Product> findAll();
+    List<Product> findAll(Boolean active);
     void deleteById(Long id);
     boolean existsByName(String name);
 }

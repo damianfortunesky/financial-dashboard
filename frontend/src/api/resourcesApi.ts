@@ -20,6 +20,7 @@ import type {
   NamedUpdateRequest,
   NecessityDistributionResponse,
   PaymentMethodResponse,
+  ProductFilters,
   ProductResponse,
   PurchaseFilters,
   PurchaseItemResponse,
@@ -87,7 +88,15 @@ export const expensesApi = {
   }
 };
 
-export const productsApi = crudApi<ProductResponse, CreateProductRequest, UpdateProductRequest>("products");
+const productsCrudApi = crudApi<ProductResponse, CreateProductRequest, UpdateProductRequest>("products");
+
+export const productsApi = {
+  ...productsCrudApi,
+  list: async (filters: ProductFilters = {}) =>
+    (await httpClient.get<ProductResponse[]>("/api/v1/products", { params: cleanParams(filters) })).data,
+  listActive: async () =>
+    (await httpClient.get<ProductResponse[]>("/api/v1/products", { params: { active: true } })).data
+};
 
 export const purchasesApi = {
   list: async (filters: PurchaseFilters = {}) =>

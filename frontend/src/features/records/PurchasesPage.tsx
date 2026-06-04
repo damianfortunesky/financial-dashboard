@@ -45,7 +45,8 @@ export function PurchasesPage() {
   const list = useQuery({ queryKey: queryKeys.purchases(), queryFn: () => purchasesApi.list() });
   const merchants = useQuery({ queryKey: queryKeys.merchants, queryFn: merchantsApi.list });
   const payments = useQuery({ queryKey: queryKeys.paymentMethods, queryFn: paymentMethodsApi.list });
-  const products = useQuery({ queryKey: queryKeys.products, queryFn: productsApi.list });
+  const products = useQuery({ queryKey: queryKeys.products({ active: true }), queryFn: productsApi.listActive });
+  const allProducts = useQuery({ queryKey: queryKeys.products(), queryFn: () => productsApi.list() });
   const items = useQuery({
     queryKey: queryKeys.purchaseItemsByPurchase(selectedPurchase ?? 0),
     queryFn: () => purchaseItemsApi.listByPurchase(selectedPurchase ?? 0),
@@ -106,7 +107,7 @@ export function PurchasesPage() {
   const name = <T extends { id: number; name: string }>(xs: T[] | undefined, id: number) => xs?.find((x) => x.id === id)?.name ?? "-";
   const productOptionsCount = products.data?.length ?? 0;
   const productSelectSize = productOptionsCount > 8 ? 8 : undefined;
-  const error = list.error ?? save.error ?? addItem.error ?? updateItem.error ?? remove.error ?? removeItem.error ?? items.error;
+  const error = list.error ?? save.error ?? addItem.error ?? updateItem.error ?? remove.error ?? removeItem.error ?? items.error ?? products.error ?? allProducts.error;
 
   return (
     <div className={styles.stack}>
@@ -149,7 +150,7 @@ export function PurchasesPage() {
               {editingItem && <Button type="button" variant="ghost" onClick={() => resetItemForm()}>Cancelar selección</Button>}
             </div>
           </form>
-          {(items.data?.length ?? 0) === 0 ? <EmptyState message="Esta compra todavía no tiene ítems." /> : <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Producto</th><th>Cantidad</th><th>Unitario</th><th>Subtotal</th><th>Acciones</th></tr></thead><tbody>{items.data?.map((item) => <tr key={item.id} className={editingItem?.id === item.id ? styles.selectedRow : undefined}><td>{name(products.data, item.productId)}</td><td>{item.quantity}</td><td>{formatCurrency(item.unitPrice)}</td><td>{formatCurrency(item.subtotal)}</td><td><div className={styles.rowActions}><Button size="small" variant="secondary" onClick={() => selectItem(item)}>{editingItem?.id === item.id ? "Seleccionado" : "Seleccionar"}</Button></div></td></tr>)}</tbody></table></div>}
+          {(items.data?.length ?? 0) === 0 ? <EmptyState message="Esta compra todavía no tiene ítems." /> : <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Producto</th><th>Cantidad</th><th>Unitario</th><th>Subtotal</th><th>Acciones</th></tr></thead><tbody>{items.data?.map((item) => <tr key={item.id} className={editingItem?.id === item.id ? styles.selectedRow : undefined}><td>{name(allProducts.data, item.productId)}</td><td>{item.quantity}</td><td>{formatCurrency(item.unitPrice)}</td><td>{formatCurrency(item.subtotal)}</td><td><div className={styles.rowActions}><Button size="small" variant="secondary" onClick={() => selectItem(item)}>{editingItem?.id === item.id ? "Seleccionado" : "Seleccionar"}</Button></div></td></tr>)}</tbody></table></div>}
         </Card>
       )}
     </div>
