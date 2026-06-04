@@ -5,8 +5,8 @@ import com.financialdashboard.domain.model.Product;
 import com.financialdashboard.domain.port.in.ProductUseCase;
 import com.financialdashboard.domain.port.out.*;
 import com.financialdashboard.shared.exception.*;
-import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +25,7 @@ public class ProductService implements ProductUseCase {
         Product entity = Product.builder()
                 .name(request.getName())
                 .description(request.getDescription())
-                .unitOfMeasure(request.getUnitOfMeasure())
+                .unitOfMeasure(normalizeUnitOfMeasure(request.getUnitOfMeasure()))
                 .categoryId(request.getCategoryId())
                 .subcategoryId(request.getSubcategoryId())
                 .active(true)
@@ -40,7 +40,7 @@ public class ProductService implements ProductUseCase {
                 .id(id)
                 .name(request.getName())
                 .description(request.getDescription())
-                .unitOfMeasure(request.getUnitOfMeasure())
+                .unitOfMeasure(normalizeUnitOfMeasure(request.getUnitOfMeasure()))
                 .categoryId(request.getCategoryId())
                 .subcategoryId(request.getSubcategoryId())
                 .active(request.getActive() != null ? request.getActive() : current.getActive())
@@ -64,6 +64,10 @@ public class ProductService implements ProductUseCase {
     public void delete(Long id) {
         repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         repository.deleteById(id);
+    }
+
+    private String normalizeUnitOfMeasure(String unitOfMeasure) {
+        return unitOfMeasure == null ? null : unitOfMeasure.trim().toUpperCase(Locale.ROOT);
     }
 
     private ProductResponse toResponse(Product entity) {
