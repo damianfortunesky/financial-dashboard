@@ -68,10 +68,22 @@ export function PurchasesPage() {
       form.reset(purchaseDefaults);
     }
   });
-  const saveItem = useMutation({
-    mutationFn: (values: ItemValues) => editingItem
-      ? purchaseItemsApi.update(editingItem.id, { productId: values.productId, quantity: values.quantity, unitPrice: values.unitPrice, notes: values.notes || null })
-      : purchaseItemsApi.create({ ...values, notes: values.notes || null }),
+  const addItem = useMutation({
+    mutationFn: (values: ItemValues) => purchaseItemsApi.create({ ...values, notes: values.notes || null }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.purchaseItemsByPurchase(selectedPurchase ?? 0) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+      resetItemForm();
+    }
+  });
+  const updateItem = useMutation({
+    mutationFn: (values: ItemValues) => {
+      if (!editingItem) {
+        throw new Error("Seleccioná un ítem para modificarlo");
+      }
+
+      return purchaseItemsApi.update(editingItem.id, { productId: values.productId, quantity: values.quantity, unitPrice: values.unitPrice, notes: values.notes || null });
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.purchaseItemsByPurchase(selectedPurchase ?? 0) });
       await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
@@ -87,8 +99,12 @@ export function PurchasesPage() {
       resetItemForm();
     }
   });
+  const selectItem = (item: PurchaseItemResponse) => {
+    setEditingItem(item);
+    itemForm.reset({ purchaseId: selectedPurchase ?? item.purchaseId, productId: item.productId, quantity: item.quantity, unitPrice: item.unitPrice, notes: item.notes ?? "" });
+  };
   const name = <T extends { id: number; name: string }>(xs: T[] | undefined, id: number) => xs?.find((x) => x.id === id)?.name ?? "-";
-  const error = list.error ?? save.error ?? saveItem.error ?? remove.error ?? removeItem.error ?? items.error;
+  const error = list.error ?? save.error ?? addItem.error ?? updateItem.error ?? remove.error ?? removeItem.error ?? items.error;
 
   return (
     <div className={styles.stack}>
@@ -110,19 +126,21 @@ export function PurchasesPage() {
         {(list.data?.length ?? 0) === 0 ? <EmptyState /> : <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>ID</th><th>Fecha</th><th>Comercio</th><th>Pago</th><th>Total</th><th>Acciones</th></tr></thead><tbody>{list.data?.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.purchaseDate}</td><td>{name(merchants.data, item.merchantId)}</td><td>{name(payments.data, item.paymentMethodId)}</td><td>{formatCurrency(item.totalAmount)}</td><td><div className={styles.rowActions}><Button size="small" variant="secondary" onClick={() => { setSelectedPurchase(item.id); resetItemForm(item.id); }}>Ítems</Button><Button size="small" variant="secondary" onClick={() => { setEditing(item); form.reset({ ...item, notes: item.notes ?? "" }); }}>Editar</Button><Button size="small" variant="danger" onClick={() => remove.mutate(item.id)}>Eliminar</Button></div></td></tr>)}</tbody></table></div>}
       </Card>
       {selectedPurchase && (
-        <Card title={`${editingItem ? "Editar" : "Agregar"} ítem de compra #${selectedPurchase}`}>
-          <form className={styles.form} onSubmit={itemForm.handleSubmit((values) => saveItem.mutate(values))}>
+        <Card title={`Ítems de compra #${selectedPurchase}`}>
+          <form className={styles.form} onSubmit={itemForm.handleSubmit((values) => addItem.mutate(values))}>
             <input type="hidden" {...itemForm.register("purchaseId")} />
             <div className={styles.field}><label>Producto</label><select {...itemForm.register("productId")}><option value="0">Seleccionar</option>{products.data?.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}</select><FieldError message={itemForm.formState.errors.productId?.message} /></div>
             <div className={styles.field}><label>Cantidad</label><input type="number" step="0.01" {...itemForm.register("quantity")} /><FieldError message={itemForm.formState.errors.quantity?.message} /></div>
             <div className={styles.field}><label>Precio unitario</label><input type="number" step="0.01" {...itemForm.register("unitPrice")} /><FieldError message={itemForm.formState.errors.unitPrice?.message} /></div>
             <div className={styles.field}><label>Notas</label><input {...itemForm.register("notes")} /></div>
             <div className={styles.actions}>
-              <Button disabled={saveItem.isPending}>{editingItem ? "Guardar ítem" : "Agregar ítem"}</Button>
-              {editingItem && <Button type="button" variant="secondary" onClick={() => resetItemForm()}>Cancelar</Button>}
+              <Button disabled={addItem.isPending}>Agregar ítem</Button>
+              <Button type="button" variant="secondary" disabled={!editingItem || updateItem.isPending} onClick={itemForm.handleSubmit((values) => updateItem.mutate(values))}>Modificar ítem</Button>
+              <Button type="button" variant="danger" disabled={!editingItem || removeItem.isPending} onClick={() => editingItem && removeItem.mutate(editingItem.id)}>Eliminar ítem</Button>
+              {editingItem && <Button type="button" variant="ghost" onClick={() => resetItemForm()}>Cancelar selección</Button>}
             </div>
           </form>
-          {(items.data?.length ?? 0) === 0 ? <EmptyState message="Esta compra todavía no tiene ítems." /> : <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Producto</th><th>Cantidad</th><th>Unitario</th><th>Subtotal</th><th>Acciones</th></tr></thead><tbody>{items.data?.map((item) => <tr key={item.id}><td>{name(products.data, item.productId)}</td><td>{item.quantity}</td><td>{formatCurrency(item.unitPrice)}</td><td>{formatCurrency(item.subtotal)}</td><td><div className={styles.rowActions}><Button size="small" variant="secondary" onClick={() => { setEditingItem(item); itemForm.reset({ purchaseId: selectedPurchase, productId: item.productId, quantity: item.quantity, unitPrice: item.unitPrice, notes: item.notes ?? "" }); }}>Editar</Button><Button size="small" variant="danger" onClick={() => removeItem.mutate(item.id)}>Eliminar</Button></div></td></tr>)}</tbody></table></div>}
+          {(items.data?.length ?? 0) === 0 ? <EmptyState message="Esta compra todavía no tiene ítems." /> : <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Producto</th><th>Cantidad</th><th>Unitario</th><th>Subtotal</th><th>Acciones</th></tr></thead><tbody>{items.data?.map((item) => <tr key={item.id} className={editingItem?.id === item.id ? styles.selectedRow : undefined}><td>{name(products.data, item.productId)}</td><td>{item.quantity}</td><td>{formatCurrency(item.unitPrice)}</td><td>{formatCurrency(item.subtotal)}</td><td><div className={styles.rowActions}><Button size="small" variant="secondary" onClick={() => selectItem(item)}>{editingItem?.id === item.id ? "Seleccionado" : "Seleccionar"}</Button></div></td></tr>)}</tbody></table></div>}
         </Card>
       )}
     </div>
