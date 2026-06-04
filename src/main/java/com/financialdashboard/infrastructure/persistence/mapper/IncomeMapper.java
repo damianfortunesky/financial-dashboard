@@ -34,8 +34,14 @@ public interface IncomeMapper {
     @Update("UPDATE core.incomes SET is_active = 0, updated_at = SYSUTCDATETIME() WHERE income_id = #{id}")
     void softDeleteById(Long id);
 
-    @Select("SELECT * FROM core.incomes WHERE (income_date >= #{dateFrom} OR #{dateFrom} IS NULL) AND (income_date <= #{dateTo} OR #{dateTo} IS NULL)")
+    @Select({"<script>",
+            "SELECT * FROM core.incomes",
+            "<where>",
+            "<if test='dateFrom != null'>AND income_date &gt;= #{dateFrom}</if>",
+            "<if test='dateTo != null'>AND income_date &lt;= #{dateTo}</if>",
+            "</where>",
+            "</script>"})
     @ResultMap("IncomeResult")
-    List<Income> findAllFiltered(LocalDate dateFrom, LocalDate dateTo);
+    List<Income> findAllFiltered(@Param("dateFrom") LocalDate dateFrom, @Param("dateTo") LocalDate dateTo);
 
 }
