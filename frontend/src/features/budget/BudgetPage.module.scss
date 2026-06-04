@@ -1,0 +1,26 @@
+@use "../../styles/variables" as *;
+
+.sheetCard { overflow: hidden; }
+.summary { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+.summaryItem { border: 1px solid $border; border-radius: 14px; padding: 0.9rem; background: rgba(15, 23, 42, 0.46); }
+.summaryItem span { display: block; color: $muted; font-size: 0.8rem; font-weight: 750; }
+.summaryItem strong { display: block; margin-top: 0.35rem; font-size: 1.1rem; }
+.sheetWrap { overflow: auto; border: 1px solid $border; border-radius: 14px; background: #d9eef3; }
+.sheet { width: max-content; min-width: 100%; border-collapse: collapse; color: #020617; font-size: 0.78rem; }
+.sheet th, .sheet td { border: 1px solid #0f172a; padding: 0.34rem 0.45rem; white-space: nowrap; }
+.sheet thead th { position: sticky; top: 0; z-index: 2; background: #050505; color: #fff; text-align: center; font-weight: 850; }
+.label { min-width: 220px; max-width: 280px; position: sticky; left: 0; z-index: 1; background: inherit; font-weight: 700; text-align: left; }
+.month { min-width: 105px; text-align: right; font-variant-numeric: tabular-nums; }
+.section td, .section .label { background: #8ed0dc; font-weight: 850; text-transform: uppercase; }
+.income td, .income .label { background: #d9eef3; }
+.expense td, .expense .label { background: #ffd0a6; }
+.purchase td, .purchase .label { background: #bfe5ec; }
+.total td, .total .label { background: #f0cccc; font-weight: 850; }
+.net td, .net .label { background: #c9ef9b; font-weight: 900; }
+.empty td, .empty .label { background: #eef8fb; height: 1rem; }
+.value { text-align: right; font-weight: 700; }
+.zero { color: #475569; text-align: center; }
+.negative { color: #9f1239; }
+.hint { margin: 0.75rem 0 0; color: $muted; font-size: 0.85rem; }
+@media (max-width: 1150px) { .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 680px) { .summary { grid-template-columns: 1fr; } }
