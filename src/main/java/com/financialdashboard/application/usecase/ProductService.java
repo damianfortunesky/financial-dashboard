@@ -5,8 +5,8 @@ import com.financialdashboard.domain.model.Product;
 import com.financialdashboard.domain.port.in.ProductUseCase;
 import com.financialdashboard.domain.port.out.*;
 import com.financialdashboard.shared.exception.*;
-import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,13 +19,12 @@ public class ProductService implements ProductUseCase {
 
     @Override
     public ProductResponse create(CreateProductRequest request) {
-        ensureExists(categoryRepository, request.getCategoryId(), "Category");
-        if (request.getSubcategoryId() != null) { ensureExists(subCategoryRepository, request.getSubcategoryId(), "SubCategory"); }
+        validateProductRefs(request.getCategoryId(), request.getSubcategoryId());
         if (repository.existsByName(request.getName())) { throw new DuplicateResourceException("Product already exists"); }
         Product entity = Product.builder()
                 .name(request.getName())
                 .description(request.getDescription())
-                .unitOfMeasure(request.getUnitOfMeasure())
+                .unitOfMeasure(normalizeUnitOfMeasure(request.getUnitOfMeasure()))
                 .categoryId(request.getCategoryId())
                 .subcategoryId(request.getSubcategoryId())
                 .active(true)
@@ -36,11 +35,12 @@ public class ProductService implements ProductUseCase {
     @Override
     public ProductResponse update(Long id, UpdateProductRequest request) {
         Product current = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        validateProductRefs(request.getCategoryId(), request.getSubcategoryId());
         Product entity = Product.builder()
                 .id(id)
                 .name(request.getName())
                 .description(request.getDescription())
-                .unitOfMeasure(request.getUnitOfMeasure())
+                .unitOfMeasure(normalizeUnitOfMeasure(request.getUnitOfMeasure()))
                 .categoryId(request.getCategoryId())
                 .subcategoryId(request.getSubcategoryId())
                 .active(request.getActive() != null ? request.getActive() : current.getActive())
@@ -64,6 +64,21 @@ public class ProductService implements ProductUseCase {
     public void delete(Long id) {
         repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         repository.deleteById(id);
+    }
+
+    private void validateProductRefs(Long categoryId, Long subcategoryId) {
+        if (categoryId == null) { throw new BusinessException("Category is required"); }
+        if (subcategoryId == null) { throw new BusinessException("SubCategory is required"); }
+        ensureExists(categoryRepository, categoryId, "Category");
+        var subcategory = subCategoryRepository.findById(subcategoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("SubCategory not found"));
+        if (!subcategory.getCategoryId().equals(categoryId)) {
+            throw new BusinessException("SubCategory does not belong to selected category");
+        }
+    }
+
+    private String normalizeUnitOfMeasure(String unitOfMeasure) {
+        return unitOfMeasure == null ? null : unitOfMeasure.trim().toUpperCase(Locale.ROOT);
     }
 
     private ProductResponse toResponse(Product entity) {
