@@ -3,7 +3,6 @@ package com.financialdashboard.infrastructure.persistence.repository;
 import com.financialdashboard.domain.model.Merchant;
 import com.financialdashboard.domain.port.out.MerchantRepositoryPort;
 import com.financialdashboard.infrastructure.persistence.mapper.MerchantMapper;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
