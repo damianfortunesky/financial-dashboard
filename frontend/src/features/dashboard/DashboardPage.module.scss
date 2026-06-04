@@ -1,0 +1,25 @@
+@use "../../styles/variables" as *;
+.grid { display: grid; gap: 1rem; }
+.kpis { grid-template-columns: repeat(5, minmax(150px, 1fr)); }
+.panels { grid-template-columns: 1.4fr 1fr; align-items: stretch; }
+.rankings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kpiValue { margin: 0.35rem 0 0; font-size: 1.55rem; font-weight: 850; letter-spacing: -0.04em; }
+.kpiLabel { color: $muted; font-size: 0.82rem; }
+.chart { width: 100%; height: 320px; }
+.monthSnapshot { display: grid; gap: 1rem; }
+.snapshotGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.snapshotItem { display: grid; gap: 0.35rem; padding: 1rem; border: 1px solid $border; border-radius: 14px; background: rgba(15, 23, 42, 0.42); }
+.snapshotItem span, .progressHeader span, .hint { color: $muted; }
+.snapshotItem strong { font-size: 1.2rem; }
+.positiveText { color: #34d399; }
+.negativeText { color: #fb7185; }
+.progressBlock { display: grid; gap: 0.55rem; padding: 1rem; border: 1px solid $border; border-radius: 14px; background: rgba(15, 23, 42, 0.28); }
+.progressHeader { display: flex; justify-content: space-between; gap: 1rem; }
+.progressTrack { height: 12px; border-radius: 999px; overflow: hidden; background: rgba(148, 163, 184, 0.16); }
+.progressTrack span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(135deg, #22d3ee, #fb7185); }
+.hint { margin: 0; font-size: 0.86rem; }
+.list { display: grid; gap: 0.7rem; margin: 0; padding: 0; list-style: none; }
+.item { display: flex; justify-content: space-between; gap: 1rem; padding: 0.75rem; border: 1px solid $border; border-radius: 13px; background: rgba(15, 23, 42, 0.42); }
+.item span { color: $muted; }
+.amount { color: $text; font-weight: 750; }
+@media (max-width: 1150px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .panels, .rankings, .snapshotGrid { grid-template-columns: 1fr; } }
