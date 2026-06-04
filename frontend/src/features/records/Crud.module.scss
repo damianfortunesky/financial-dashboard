@@ -7,6 +7,8 @@
 .field label { color: $muted; font-size: 0.82rem; font-weight: 700; }
 .field input, .field select, .field textarea { width: 100%; border: 1px solid $border; border-radius: 12px; padding: 0.7rem 0.75rem; color: $text; background: rgba(2, 6, 23, 0.45); outline: none; &:focus { border-color: rgba(34, 211, 238, 0.48); } }
 .field textarea { min-height: 42px; resize: vertical; }
+.scrollableSelect { min-height: 220px; overflow-y: auto; scrollbar-color: rgba(34, 211, 238, 0.55) rgba(15, 23, 42, 0.75); scrollbar-width: thin; }
+.scrollableSelect option { padding: 0.45rem 0.55rem; }
 .actions { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; padding-top: 1.25rem; }
 .tableWrap { overflow-x: auto; }
 .listHeader { display: grid; gap: 0.75rem; margin-bottom: 1rem; }

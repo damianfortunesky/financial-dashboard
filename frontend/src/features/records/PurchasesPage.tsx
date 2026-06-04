@@ -104,6 +104,8 @@ export function PurchasesPage() {
     itemForm.reset({ purchaseId: selectedPurchase ?? item.purchaseId, productId: item.productId, quantity: item.quantity, unitPrice: item.unitPrice, notes: item.notes ?? "" });
   };
   const name = <T extends { id: number; name: string }>(xs: T[] | undefined, id: number) => xs?.find((x) => x.id === id)?.name ?? "-";
+  const productOptionsCount = products.data?.length ?? 0;
+  const productSelectSize = productOptionsCount > 8 ? 8 : undefined;
   const error = list.error ?? save.error ?? addItem.error ?? updateItem.error ?? remove.error ?? removeItem.error ?? items.error;
 
   return (
@@ -129,7 +131,14 @@ export function PurchasesPage() {
         <Card title={`Ítems de compra #${selectedPurchase}`}>
           <form className={styles.form} onSubmit={itemForm.handleSubmit((values) => addItem.mutate(values))}>
             <input type="hidden" {...itemForm.register("purchaseId")} />
-            <div className={styles.field}><label>Producto</label><select {...itemForm.register("productId")}><option value="0">Seleccionar</option>{products.data?.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}</select><FieldError message={itemForm.formState.errors.productId?.message} /></div>
+            <div className={styles.field}>
+              <label>Producto</label>
+              <select className={productSelectSize ? styles.scrollableSelect : undefined} size={productSelectSize} {...itemForm.register("productId")}>
+                <option value="0">Seleccionar</option>
+                {products.data?.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}
+              </select>
+              <FieldError message={itemForm.formState.errors.productId?.message} />
+            </div>
             <div className={styles.field}><label>Cantidad</label><input type="number" step="0.01" {...itemForm.register("quantity")} /><FieldError message={itemForm.formState.errors.quantity?.message} /></div>
             <div className={styles.field}><label>Precio unitario</label><input type="number" step="0.01" {...itemForm.register("unitPrice")} /><FieldError message={itemForm.formState.errors.unitPrice?.message} /></div>
             <div className={styles.field}><label>Notas</label><input {...itemForm.register("notes")} /></div>
